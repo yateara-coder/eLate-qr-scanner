@@ -91,12 +91,11 @@ async function mulaScan() {
 
         await hentiScan();
 
-        if (window.opener && !window.opener.closed) {
-          window.opener.postMessage(
-            teks,
-            "https://script.google.com"
-          );
-        }
+
+    window.location.href =
+      "https://script.google.com/macros/s/AKfycbwkU8oiTlcc1DJoDIdczao5o5Y49GuAAJC5SxlmOfbVyx1gVbKUo_ySTeUBiNuTiFS_EQ/exec?qr=" +
+      encodeURIComponent(teks);
+
       },
 
       errorMessage => {
