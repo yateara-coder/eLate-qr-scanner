@@ -84,11 +84,22 @@
         await scanner.start(
           pilihan.id,
           { fps: 10, qrbox: { width: 240, height: 240 } },
+
           async teks => {
             document.getElementById("hasil").textContent =
               "QR berjaya dibaca: " + teks;
 
             await hentiScan();
+
+            // Hantar data QR kepada aplikasi e-Kehadiran
+            if (window.opener && !window.opener.closed) {
+              window.opener.postMessage(
+                teks,
+                "https://script.google.com"
+              );
+            }
+          }
+
           }
         );
 
