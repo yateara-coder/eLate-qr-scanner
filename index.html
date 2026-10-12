@@ -59,59 +59,61 @@
     let scanner = null;
     let sedangScan = false;
 
-    async function mulaScan() {
-      if (sedangScan) return;
+async function mulaScan() {
+  if (sedangScan) return;
 
-      try {
-        if (!scanner) {
-          scanner = new Html5Qrcode("reader");
-        }
-
-        const kamera = await Html5Qrcode.getCameras();
-
-        if (!kamera || kamera.length === 0) {
-          throw new Error("Tiada kamera dikesan.");
-        }
-
-        let pilihan = kamera.find(k =>
-          /back|rear|environment|belakang/i.test(k.label)
-        );
-
-        pilihan = pilihan || kamera[kamera.length - 1];
-
-        sedangScan = true;
-
-        await scanner.start(
-          pilihan.id,
-          { fps: 10, qrbox: { width: 240, height: 240 } },
-
-          async teks => {
-            document.getElementById("hasil").textContent =
-              "QR berjaya dibaca: " + teks;
-
-            await hentiScan();
-
-            // Hantar data QR kepada aplikasi e-Kehadiran
-            if (window.opener && !window.opener.closed) {
-              window.opener.postMessage(
-                teks,
-                "https://script.google.com"
-              );
-            }
-          }
-
-          }
-        );
-
-        document.getElementById("mula").textContent = "KAMERA AKTIF";
-
-      } catch (err) {
-        sedangScan = false;
-        document.getElementById("hasil").textContent =
-          "Kamera gagal dibuka: " + err.message +
-          ". Semak kebenaran kamera browser.";
-      }
+  try {
+    if (!scanner) {
+      scanner = new Html5Qrcode("reader");
     }
+
+    const kamera = await Html5Qrcode.getCameras();
+
+    if (!kamera || kamera.length === 0) {
+      throw new Error("Tiada kamera dikesan.");
+    }
+
+    let pilihan = kamera.find(k =>
+      /back|rear|environment|belakang/i.test(k.label)
+    );
+
+    pilihan = pilihan || kamera[kamera.length - 1];
+
+    sedangScan = true;
+
+    await scanner.start(
+      pilihan.id,
+      { fps: 10, qrbox: { width: 240, height: 240 } },
+
+      async teks => {
+        document.getElementById("hasil").textContent =
+          "QR berjaya dibaca: " + teks;
+
+        await hentiScan();
+
+        if (window.opener && !window.opener.closed) {
+          window.opener.postMessage(
+            teks,
+            "https://script.google.com"
+          );
+        }
+      },
+
+      errorMessage => {
+        // Abaikan QR yang belum berjaya dibaca
+      }
+    );
+
+    document.getElementById("mula").textContent = "KAMERA AKTIF";
+
+  } catch (err) {
+    sedangScan = false;
+    document.getElementById("hasil").textContent =
+      "Kamera gagal dibuka: " + err.message +
+      ". Semak kebenaran kamera browser.";
+  }
+}
+
 
     async function hentiScan() {
       if (scanner && sedangScan) {
