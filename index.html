@@ -1,0 +1,119 @@
+
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>eLate - QR Scanner</title>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f1f5f9;
+      margin: 0;
+      padding: 20px;
+      color: #1e293b;
+    }
+    .card {
+      max-width: 480px;
+      margin: 20px auto;
+      padding: 22px;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 5px 20px #00000012;
+    }
+    h2 { color: #0757a8; text-align: center; }
+    p { text-align: center; font-size: 14px; }
+    #reader { width: 100%; margin-top: 18px; }
+    #hasil {
+      padding: 14px;
+      background: #eff6ff;
+      border-radius: 12px;
+      margin-top: 15px;
+      overflow-wrap: anywhere;
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      border: 0;
+      border-radius: 12px;
+      background: #0757a8;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>📷 eLate QR Scanner</h2>
+    <p>Halakan kamera pada QR pelajar.</p>
+    <div id="reader"></div>
+    <div id="hasil">Menunggu QR diimbas...</div>
+    <button id="mula" onclick="mulaScan()">BUKA KAMERA</button>
+    <button onclick="hentiScan()">TUTUP KAMERA</button>
+  </div>
+
+  <script>
+    let scanner = null;
+    let sedangScan = false;
+
+    async function mulaScan() {
+      if (sedangScan) return;
+
+      try {
+        if (!scanner) {
+          scanner = new Html5Qrcode("reader");
+        }
+
+        const kamera = await Html5Qrcode.getCameras();
+
+        if (!kamera || kamera.length === 0) {
+          throw new Error("Tiada kamera dikesan.");
+        }
+
+        let pilihan = kamera.find(k =>
+          /back|rear|environment|belakang/i.test(k.label)
+        );
+
+        pilihan = pilihan || kamera[kamera.length - 1];
+
+        sedangScan = true;
+
+        await scanner.start(
+          pilihan.id,
+          { fps: 10, qrbox: { width: 240, height: 240 } },
+          async teks => {
+            document.getElementById("hasil").textContent =
+              "QR berjaya dibaca: " + teks;
+
+            await hentiScan();
+          }
+        );
+
+        document.getElementById("mula").textContent = "KAMERA AKTIF";
+
+      } catch (err) {
+        sedangScan = false;
+        document.getElementById("hasil").textContent =
+          "Kamera gagal dibuka: " + err.message +
+          ". Semak kebenaran kamera browser.";
+      }
+    }
+
+    async function hentiScan() {
+      if (scanner && sedangScan) {
+        try {
+          await scanner.stop();
+          await scanner.clear();
+        } catch (err) {
+          console.log(err);
+        }
+      }
+      sedangScan = false;
+      document.getElementById("mula").textContent = "BUKA KAMERA";
+    }
+  </script>
+</body>
+</html>
